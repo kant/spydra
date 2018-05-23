@@ -25,9 +25,7 @@ import com.spotify.spydra.api.process.ProcessHelper;
 import com.spotify.spydra.model.JsonHelper;
 import com.spotify.spydra.model.SpydraArgument;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -76,6 +74,9 @@ public class GcloudExecutor {
           .readValue(output, Cluster.class);
       return Optional.of(cluster);
     } else {
+      if(output.contains("ALREADY_EXISTS")){
+        throw new GcloudClusterAlreadyExistsException(output);
+      }
       LOGGER.error("Dataproc cluster creation call failed. Command line output:");
       LOGGER.error(output);
       return Optional.empty();
@@ -146,7 +147,7 @@ public class GcloudExecutor {
     this.dryRun = dryRun;
   }
 
-  public Collection<Cluster> listClusters(String project, String region, Map<String,String> filters) throws IOException {
+  public List<Cluster> listClusters(String project, String region, Map<String,String> filters) throws IOException {
     List<String> command = Lists.newArrayList(
         "dataproc", "clusters", "list", "--format=json");
     Map<String, String> options = new HashMap<>();
