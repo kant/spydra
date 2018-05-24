@@ -85,6 +85,9 @@ public class FixedPoolSubmitter extends DynamicSubmitter {
     arguments.addOption(arguments.cluster.options, SpydraArgument.OPTION_LABELS,
         FIXED_POOLED_CLUSTER_CLIENTID_LABEL + "=" + arguments.getClientId());
 
+    arguments.addOption(arguments.cluster.options, SpydraArgument.OPTION_LABELS,
+        SPYDRA_PLACEMENT_TOKEN_LABEL + "=" + placement.token());
+
     String clusterName = generateName(arguments.getClientId(), placement.token());
     try {
       return super.createNewCluster(arguments, dataprocAPI, () -> clusterName)
@@ -105,6 +108,21 @@ public class FixedPoolSubmitter extends DynamicSubmitter {
 
   public static String generateName(String clientId, String placementToken) {
     return String.format("spydra-%s-%s", clientId, placementToken);
+  }
+
+  @Override
+  public boolean releaseCluster(SpydraArgument arguments, DataprocAPI dataprocAPI)
+      throws IOException {
+
+    Map<String, String> clusterFilter = ImmutableMap.of(
+        "status.state", "ERROR",
+        "clusterName", arguments.getCluster().getName()
+    );
+
+    boolean shouldRelease = dataprocAPI.listClusters(arguments, clusterFilter).stream()
+        .findAny().map(cluster -> cluster.status.state.equals(Cluster.Status.ERROR)).orElse(false);
+
+    return !shouldRelease || super.releaseCluster(arguments, dataprocAPI);
   }
 
   private static Map<String, String> poolableClusterFilter(String clientId) {

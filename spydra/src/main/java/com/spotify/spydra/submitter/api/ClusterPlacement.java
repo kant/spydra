@@ -55,7 +55,7 @@ abstract class ClusterPlacement {
                                                  int clusterNumber,
                                                  SpydraArgument.Pooling pooling) {
     int limit = pooling.getLimit();
-    long time = timeSource.get();
+    long time = timeSource.get() / 1000;
     long age = pooling.getMaxAge().getSeconds();
 
     long generation = computeGeneration(clusterNumber, limit, time, age);
@@ -67,7 +67,7 @@ abstract class ClusterPlacement {
   }
 
   static long computeGeneration(int clusterNumber, int limit, long time, long age) {
-    return (time - clusterNumber * (age / limit)) / age;
+    return (long) ((time - clusterNumber * (age / (float) limit)) / age);
   }
 
   private static ClusterPlacement placement(Cluster cluster) {
@@ -90,4 +90,5 @@ abstract class ClusterPlacement {
         .filter(cluster -> this.equals(placement(cluster)))
         .findFirst();
   }
+
 }
