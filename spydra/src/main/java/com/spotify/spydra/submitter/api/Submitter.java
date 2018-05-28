@@ -49,7 +49,7 @@ public class Submitter {
       String account =
           arguments.getCluster().getOptions().get(SpydraArgument.OPTION_SERVICE_ACCOUNT);
       if (arguments.isPoolingEnabled()) {
-        submitter = new PoolingSubmitter(clock::millis, account);
+        submitter = new PoolingSubmitter(clock::millis, new DefaultRandomPlacementGenerator(), account);
       } else {
         submitter = new DynamicSubmitter(account);
       }
